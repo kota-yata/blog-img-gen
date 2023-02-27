@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -16,7 +17,8 @@ P_ORANGE = "#C87F12"
 ORIGINS = [
   "https://blog.kota-yata.com",
   "https://kota-yata.com",
-  "http://127.0.0.1/"
+  "https://blog-img-gen.an.r.appspot.com/"
+  "http://localhost"
 ]
 app.add_middleware(
   CORSMiddleware,
@@ -50,9 +52,10 @@ def root(title: str = "", category: str = "", desc: str = "", token: str = Depen
       detail = "Invalid authentication credentials",
     )
   img = generate_image(title, category, desc)
-  img.save("./output.png", optimize = True, quality = 100)
-  response = FileResponse(
-    path = "./output.png",
+  img_binary = BytesIO()
+  img.save(img_binary, optimize = True, format = "PNG")
+  response = Response(
+    content = img_binary.getvalue(),
     status_code = 201,
     media_type = "image/png"
   )
